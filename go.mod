@@ -1,6 +1,6 @@
 module github.com/slimcdk/go-eon
 
-go 1.25.6
+go 1.24.0
 
 require (
 	github.com/drewstinnett/gout/v2 v2.3.0

@@ -10,12 +10,6 @@ const (
 	apiBaseURL    = "https://navigator-api.eon.se/api"
 )
 
-var (
-	// Timezone for Swedish/Copenhagen operations
-	stockholmTZ, _ = time.LoadLocation("Europe/Stockholm")
-	cph, _         = time.LoadLocation("Europe/Copenhagen")
-)
-
 // Resolution types supported by Eon API
 const (
 	Quarter Resolution = "quarter" // 15-minute intervals

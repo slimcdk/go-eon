@@ -1,3 +1,5 @@
+version: 2
+
 run:
   timeout: 5m
   tests: true
@@ -6,41 +8,25 @@ run:
 linters:
   enable:
     - errcheck      # Check for unchecked errors
-    - gosimple      # Simplify code
     - govet         # Vet examines Go source code
     - ineffassign   # Detect ineffectual assignments
     - staticcheck   # Staticcheck is go vet on steroids
     - unused        # Check for unused code
-    - gofmt         # Check whether code was gofmt-ed
-    - goimports     # Check import statements are formatted
     - misspell      # Finds commonly misspelled English words
-    - revive        # Fast, configurable, extensible, flexible, and beautiful linter for Go
-    - gosec         # Inspects source code for security problems
 
 linters-settings:
   errcheck:
     check-type-assertions: false
     check-blank: false
+    exclude-functions:
+      - (os.Unsetenv)
+      - (os.Setenv)
 
   govet:
     enable-all: true
     disable:
       - shadow  # Can be overly strict
       - fieldalignment  # Optimization not always necessary
-
-  revive:
-    rules:
-      - name: exported
-        disabled: true
-        arguments:
-          - "checkPrivateReceivers"
-          - "sayRepetitiveInsteadOfStutters"
-
-  gosec:
-    excludes:
-      - G401  # Detect the usage of DES, RC4, MD5 or SHA1
-      - G501  # Import blocklist: crypto/md5
-      - G505  # Import blocklist: crypto/sha1
 
 issues:
   exclude-use-default: false

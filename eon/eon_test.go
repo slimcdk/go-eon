@@ -10,10 +10,10 @@ import (
 func TestNew(t *testing.T) {
 	t.Run("creates client from environment variables", func(t *testing.T) {
 		// Set env vars
-		os.Setenv("CLIENT_ID", "test-client-id")
-		os.Setenv("CLIENT_SECRET", "test-client-secret")
-		defer os.Unsetenv("CLIENT_ID")
-		defer os.Unsetenv("CLIENT_SECRET")
+		_ = os.Setenv("CLIENT_ID", "test-client-id")
+		_ = os.Setenv("CLIENT_SECRET", "test-client-secret")
+		defer func() { _ = os.Unsetenv("CLIENT_ID") }()
+		defer func() { _ = os.Unsetenv("CLIENT_SECRET") }()
 
 		c := New()
 		assert.NotNil(t, c)
