@@ -56,7 +56,6 @@ func TestTokenExpiry(t *testing.T) {
 		c := &client{}
 
 		// Simulate what happens after successful authentication
-		c.accessToken = "test-token"
 		expiresIn := 3600
 		c.tokenExpiry = time.Now().Add(time.Duration(expiresIn-60) * time.Second)
 
@@ -73,6 +72,7 @@ func TestTokenExpiry(t *testing.T) {
 
 		// Token is expired
 		assert.True(t, time.Now().After(c.tokenExpiry))
+		assert.NotEmpty(t, c.accessToken) // Verify token exists but is expired
 	})
 }
 
