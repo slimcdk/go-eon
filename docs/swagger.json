@@ -1,0 +1,861 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Energidata API",
+    "description": "<p>The API provides installation and measurement information connected to the consumer’s associated business account.</p> \t\t\t\t\t\t\t\t\t\t\t\t\r\n\t\t\t\t\t\t\t\t\t\t\t\t<p>Each request requires a token. Provide 'client_id: your key', 'client_secret: your secret', 'grant_type: client_credentials' and 'scope: navigator' in the request body.\r\n\t\t\t\t\t\t\t\t\t\t\t\t<br>The token endpoint is: \r\n\t\t\t\t\t\t\t\t\t\t\t\t<br><b>/connect/token</b> (POST). (no API prefix)\r\n\t\t\t\t\t\t\t\t\t\t\t\t</p>\r\n\t\t\t\t\t\t\t\t\t\t\t\t<p>If more information regarding an installation is required, the consumer can fetch a list of metadata for each connected installation:\r\n\t\t\t\t\t\t\t\t\t\t\t\t<br><b>/api/installations</b>.</p>\r\n\t\t\t\t\t\t\t\t\t\t\t\t<p>To fetch measurement data, the expected usage is to do an initial request to get a list of measurement series for each installation:\r\n\t\t\t\t\t\t\t\t\t\t\t\t<br><b>/api/installations/measurement-series</b>. \r\n\t\t\t\t\t\t\t\t\t\t\t\t<br>With the received data the consumer can choose which measurement series to get measurements:\r\n\t\t\t\t\t\t\t\t\t\t\t\t<br><b>/api/measurements/{Id}/resolution/{resolution}</b> (where Id is the measurement serie's Id).\r\n\t\t\t\t\t\t\t\t\t\t\t\t</p>\r\n\t\t\t\t\t\t\t\t\t\t\t\t<p>To fetch cost data, the expected usage is to do an initial request to get a list of installations:\r\n\t\t\t\t\t\t\t\t\t\t\t\t<br><b>/api/installations</b>.\r\n\t\t\t\t\t\t\t\t\t\t\t\t<br>With the received data the consumer can choose which installation to get cost data for:\r\n\t\t\t\t\t\t\t\t\t\t\t\t<br><b>/api/costs/{installationId}</b>.</p>\r\n\t\t\t\t\t\t\t\t\t\t\t\t",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/costs/{id}": {
+      "get": {
+        "tags": [
+          "Costs"
+        ],
+        "summary": "Returns an object containing some installation metadata and a list of costs based on the input id, resolution and timespan",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Installation identifier",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "Optional start time of timespan. Whole month is considered",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "Optional end time of timespan. Whole month is considered",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/CostsElectricityWrapper"
+                    },
+                    {
+                      "$ref": "#/components/schemas/CostsProductionWrapper"
+                    },
+                    {
+                      "$ref": "#/components/schemas/CostsHeatWrapper"
+                    },
+                    {
+                      "$ref": "#/components/schemas/CostsColdWrapper"
+                    },
+                    {
+                      "$ref": "#/components/schemas/CostsGasWrapper"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      }
+    },
+    "/api/installations/measurement-series": {
+      "get": {
+        "tags": [
+          "Installations"
+        ],
+        "summary": "Returns a list of installation identifiers with connected measurement series",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstallationsMeasurementsWrapper"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      }
+    },
+    "/api/installations": {
+      "get": {
+        "tags": [
+          "Installations"
+        ],
+        "summary": "Returns a list of installations with connected metadata",
+        "parameters": [
+          {
+            "name": "installationFilter",
+            "in": "query",
+            "description": "Optional query parameter input filter of installation identifiers.\r\n            Useable if not all installations are desired. Example \"?installationFilter=1&installationFilter=2\".",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstallationsWrapper"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      }
+    },
+    "/api/measurements/{id}/resolution/{resolution}": {
+      "get": {
+        "tags": [
+          "Measurements"
+        ],
+        "summary": "Returns an object containing the given id and a list of measurements values based on the input id, resolution and timespan.\r\nData can be fetched as far back as the current year, plus five calendar years back.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The identifier of the desired measurement serie.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "resolution",
+            "in": "path",
+            "description": "The desired return resolution: \r\n            Valid input: \"quarter\", \"hour\", \"day\", \"month\".",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "Optional start time of timespan. Works in conjuction with the \"to\" parameter.\r\n            Will default to contract period start if given date is lower.\r\n            Mandatory in the case of quarter (maximum timespan of 3 months).\r\n            Mandatory in the case of hour (maximum timespan of 1 year).",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "Optional end time of timespan. Works in conjuction with the \"from\" parameter.\r\n            Will default to contract period end if given value is higher.\r\n            Mandatory in the case of quarter (maximum timespan of 3 months).\r\n            Mandatory in the case of hour (maximum timespan of 1 year).",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "includeMissing",
+            "in": "query",
+            "description": "Whether a series should be returned as a full time span (filling in missing values) for given resolution or not.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeasurementsWrapper"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "429": {
+            "description": "Too Many Requests"
+          },
+          "500": {
+            "description": "Server Error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CostBioGasDetailsDto": {
+        "type": "object",
+        "properties": {
+          "bioGasCarbonDioxideTax": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "bioGasCarbonDioxideTaxVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "biogasEnergyTax": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "biogasEnergyTaxVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "biogasAccumulatedTax": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "biogasAccumulatedTaxVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CostElectricityProductionDto": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CostsBaseDto"
+          }
+        ],
+        "properties": {
+          "retailCost": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "retailCostVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "energyTax": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "energyTaxVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "netCost": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "netCostVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "costGridDetails": {
+            "$ref": "#/components/schemas/CostGridDetailsDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CostGasDto": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CostsBaseDto"
+          }
+        ],
+        "properties": {
+          "retailCost": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "retailCostVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "energyTax": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "energyTaxVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "costBioGasDetails": {
+            "$ref": "#/components/schemas/CostBioGasDetailsDto"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CostGridDetailsDto": {
+        "type": "object",
+        "properties": {
+          "gridSubscription": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridSubscriptionVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridSubscribedEffectReactiveIn": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridSubscribedEffectReactiveInVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridSubscribedEffectReactiveOut": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridSubscribedEffectReactiveOutVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridSubscribedEffectWinter": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridSubscribedEffectWinterVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridSubscribedEffect": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridSubscribedEffectVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridEffectCompensation": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridEffectCompensationVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridEffect": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridEffectVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridCompensationEnergy": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridCompensationEnergyVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridExceededReactiveEffectOut": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridExceededReactiveEffectOutVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridCompensationLoss": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridCompensationLossVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridOther": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridOtherVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridExceededActiveEffect": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridExceededActiveEffectVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridFixed": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridFixedVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridExceededReactiveEffect": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridExceededReactiveEffectVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridTransfer": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "gridTransferVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CostHeatColdDto": {
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CostsBaseDto"
+          }
+        ],
+        "properties": {
+          "retailCost": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "retailCostVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "effectCost": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "effectCostVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "energyCost": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "energyCostVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "flowCost": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "flowCostVAT": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CostsBaseDto": {
+        "required": [
+          "month"
+        ],
+        "type": "object",
+        "properties": {
+          "month": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CostsColdWrapper": {
+        "required": [
+          "costs"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CostsWrapper"
+          }
+        ],
+        "properties": {
+          "costs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CostHeatColdDto"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "CostsElectricityWrapper": {
+        "required": [
+          "costs"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CostsWrapper"
+          }
+        ],
+        "properties": {
+          "costs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CostElectricityProductionDto"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "CostsGasWrapper": {
+        "required": [
+          "costs"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CostsWrapper"
+          }
+        ],
+        "properties": {
+          "costs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CostGasDto"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "CostsHeatWrapper": {
+        "required": [
+          "costs"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CostsWrapper"
+          }
+        ],
+        "properties": {
+          "costs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CostHeatColdDto"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "CostsProductionWrapper": {
+        "required": [
+          "costs"
+        ],
+        "type": "object",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CostsWrapper"
+          }
+        ],
+        "properties": {
+          "costs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CostElectricityProductionDto"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "CostsWrapper": {
+        "required": [
+          "energyClass",
+          "installation"
+        ],
+        "type": "object",
+        "properties": {
+          "energyClass": {
+            "minLength": 1,
+            "type": "string",
+            "readOnly": true
+          },
+          "installation": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "InstallationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "business": {
+            "type": "string",
+            "nullable": true
+          },
+          "category": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "energyClass": {
+            "type": "string",
+            "nullable": true
+          },
+          "gridArea": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "orgNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "priceArea": {
+            "type": "string",
+            "nullable": true
+          },
+          "resolution": {
+            "type": "string",
+            "nullable": true
+          },
+          "safetyLevel": {
+            "type": "number",
+            "format": "float",
+            "nullable": true
+          },
+          "hasMeasurementsSubscription": {
+            "type": "boolean"
+          },
+          "hasCostsSubscription": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "InstallationMeasurementsDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "measurementSeries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MeasurementSeriesDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "InstallationsMeasurementsWrapper": {
+        "type": "object",
+        "properties": {
+          "installations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InstallationMeasurementsDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "InstallationsWrapper": {
+        "type": "object",
+        "properties": {
+          "installations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InstallationDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MeasurementDto": {
+        "type": "object",
+        "properties": {
+          "timeStamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "value": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MeasurementSeriesDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "seriesType": {
+            "type": "string",
+            "nullable": true
+          },
+          "unit": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastUpdate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MeasurementsWrapper": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "resolution": {
+            "type": "string",
+            "nullable": true
+          },
+          "measurements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MeasurementDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}
